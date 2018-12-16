@@ -17,45 +17,68 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
-int		save_next_line(char **line,char *arr)
-{	
-	char static **tmp;
-	if (line == NULL)
-		line = ft_memalloc(1);
-
-	return (1);
-}
-
 int		get_next_line(const int fd, char **line)
 {
-	char		*arr;
-	int			ret;
-	char		buf[BUFF_SIZE + 1];
-	char 		*tmp;
+	char static		*arr;
+	int				ret;
+	char			buf[BUFF_SIZE + 1];
+	char			*copy;
 
+	if (fd < 0 || line == NULL)
+		return (-1);
 	arr = NULL;
 	while ((ret = read(fd, buf, BUFF_SIZE)))
 	{
 		buf[ret] = '\0';
-		if (arr == NULL)
-			arr = ft_strnew(1);
-		tmp = ft_strjoin(arr, buf);
-		free(arr);
-		arr = tmp;
 		if (ft_strchr(buf, '\n'))
 			break ;
-	} 
-	return (save_next_line(line, arr));
+		printf("buf = %s\n",buf);
+		if (arr == NULL)
+			arr = ft_strnew(ret);
+		copy = ft_strjoin(arr, buf);
+		free(arr);
+		arr = copy;
+	}
+	if (arr == NULL)
+		return (0);
+	*line = ft_strnew(ft_strlen(arr));
+	*line = ft_strcpy(*line,arr);
+	return (1);
 }
 
-int main(int argc, char **argv)
+int				main(void)
 {
-	char **line;
-	int fd = open("file", O_RDONLY);
+	char		*line;
+	int			fd;
+	int			ret;
+	int			count_lines;
+	char		*filename;
+	int			errors;
 
-	get_next_line(fd,line);
-	printf("%s\n", *line);
-	close(fd);
-
-	return 0;
+	filename = "file";
+	fd = open(filename, O_RDONLY);
+	if (fd > 2)
+	{
+		count_lines = 0;
+		errors = 0;
+		line = NULL;
+		while ((ret = get_next_line(fd, &line)) > 0)
+		{
+			if (count_lines == 0 && strcmp(line, "1234567890abcde") != 0)
+				errors++;
+			count_lines++;
+			if (count_lines > 50)
+				break ;
+		}
+		close(fd);
+		if (count_lines != 1)
+			printf("-> must have returned '1' once instead of %d time(s)\n", count_lines);
+		if (errors > 0)
+			printf("-> must have read \"1234567890abcde\" instead of \"%s\"\n", line);
+		if (count_lines == 1 && errors == 0)
+			printf("OK\n");
+	}
+	else
+		printf("An error occured while opening file %s\n", filename);
+	return (0);
 }
