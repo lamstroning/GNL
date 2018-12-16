@@ -11,6 +11,7 @@ $(NAME):
 	ranlib $(NAME)
 	gcc main.o -L. -lft -o test
 clean:
+	rm -rf libft/*.o
 	rm -rf *.o
 fclean: clean
 	rm -f $(NAME)
